@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .chatbox {
+            outline: 1px solid silver;
+            min-height: 160px;
+            padding: 0.5em;
+        }
+    </style>
+    <title>Home</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row text-center">
+            <h1 class="fw-bolder mt-3">Home Page</h1>
+        </div>
+
+        <div class="row text-center d-flex flex-nowrap justify-content-between align-items-start">
+            <div class="col-8 border rounded me-2">
+                <h3>Chat</h3>
+
+                <form action="#">
+                    <div class="input-group pb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+
+                        <input type="text" name="username" id="username" class="form-control" autocomplete="off"
+                            placeholder="Enter your username here">
+                    </div>
+
+                    <div class="input-group pb-2">
+                        <span class="input-group-text">
+                            <i class="bi bi-chat-square-text-fill"></i>
+                        </span>
+
+                        <input type="text" name="message" id="message" class="form-control" autocomplete="off"
+                            placeholder="Enter your message here">
+
+                        <span class="input-group-text">
+                            <input id="btn-send" type="button" value="Send" class="btn btn-primary">
+                        </span>
+
+                        <input type="hidden" name="action" id="action">
+                    </div>
+                </form>
+
+                <hr>
+
+                <div class="container text-center chatbox mb-3 rounded">
+                    <div id="output" class="row"></div>
+                </div>
+            </div>
+
+            <div class="col-4 border rounded mx-2">
+                <h3>Who's Online</h3>
+                <ul id="user-list" class="list-group mb-2"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+
+    <script>
+        let socket = null;
+
+        const log = msg => console.log(msg);
+        const addHandler = (theElement, whichEvent, method) => {
+            if (null != theElement && null != whichEvent && typeof method == "function") {
+                theElement.addEventListener(whichEvent, method);
+            }
+        };
+
+        const addClickHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "click", handler);
+            }
+        };
+
+        const addKeyupHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "keyup", handler);
+            }
+        };
+
+        const addKeydownHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "keydown", handler);
+            }
+        };
+
+        const addOnFocusHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "focus", handler);
+            }
+        };
+
+        const addOnChangeHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "change", handler);
+            }
+        };
+
+        const addOffFocusHandler = (theElement, handler) => {
+            if (null != theElement && typeof handler == "function") {
+                addHandler(theElement, "focusout", handler);
+            }
+        };
+
+        const appendChild = (parent, child) => {
+            if (null != parent && null != child) {
+                parent.appendChild(child);
+            }
+        };
+
+        const appendBeforeLastChild = (parent, child) => {
+            if (null != parent && null != child) {
+                const lastChildIndex = parent.children.length - 1;
+                const lastChild = parent.children[lastChildIndex];
+                parent.insertBefore(child, lastChild);
+            }
+        };
+
+        const append = (parent, child) => {
+            parent.append(child);
+        };
+
+        const removeChildren = (parent) => {
+            parent.querySelectorAll("*").forEach((dialog) => {
+                dialog.remove();
+            });
+        };
+
+        const countChildren = (parent) => {
+            if (null != parent) {
+                return parent.children.length;
+            }
+            return null;
+        };
+
+        const addAttribute = (theElement, whichAttribute, attributeValue) => {
+            if (null != theElement) {
+                theElement.setAttribute(whichAttribute, attributeValue);
+            }
+        };
+
+        const setAttribute = (theElement, whichAttribute, attributeValue) => {
+            if (null != theElement) {
+                theElement.setAttribute(whichAttribute, attributeValue);
+            }
+        };
+
+        const getAttribute = (theElement, whichAttribute) => {
+            if (null != theElement && null != whichAttribute) {
+                return theElement.getAttribute(`${whichAttribute}`) || null;
+            }
+            return "Element is null";
+        };
+
+        const removeAttribute = (theElement, whichAttribute) => {
+            if (null != theElement) {
+                if (theElement.hasAttribute(whichAttribute)) {
+                    theElement.removeAttribute(whichAttribute);
+                }
+            }
+        };
+
+        const getElement = (nameIdClass) => {
+            let element = null;
+            if (null != (element = document.querySelector(`${nameIdClass}`))) {
+                return element;
+            }
+            if (null != (element = document.querySelector(`#${nameIdClass}`))) {
+                return element;
+            }
+            if (null != (element = document.querySelector(`.${nameIdClass}`))) {
+                return element;
+            }
+            return null;
+        };
+
+        const cap = (arg) => {
+            let word_split = null,
+                line = "",
+                word = arg.toString();
+            if (null !== word && undefined !== word) {
+                if (
+                    word.trim().toLowerCase() === "id" ||
+                    word.trim().toLowerCase() === "ssn" ||
+                    word.trim().toLowerCase() === "sku" ||
+                    word.trim().toLowerCase() === "vm" ||
+                    word.trim().toLowerCase() === "mac" ||
+                    word.trim().toLowerCase() === "imei" ||
+                    word.trim().toLowerCase() === "os" ||
+                    word.trim().toLowerCase() === "atm" ||
+                    word.trim().toLowerCase() === "pa" ||
+                    word.trim().toLowerCase() === "rjw"
+                ) {
+                    return word.toUpperCase();
+                } else if (word.match(/[-]/)) {
+                    if (null !== (word_split = word.split(["-"])).length > 0) {
+                        for (let i = 0; i < word_split.length; i++) {
+                            if (i < word_split.length - 1) {
+                                line +=
+                                    word_split[i].substring(0, 1).toUpperCase() +
+                                    word_split[i].substring(1) +
+                                    "-";
+                            } else {
+                                line +=
+                                    word_split[i].substring(0, 1).toUpperCase() +
+                                    word_split[i].substring(1);
+                            }
+                        }
+                        return line;
+                    }
+                } else if (word.match(/[ ]/)) {
+                    if (null !== (word_split = word.split([" "])).length > 0) {
+                        for (let i = 0; i < word_split.length; i++) {
+                            if (i < word_split.length - 1) {
+                                line +=
+                                    word_split[i].substring(0, 1).toUpperCase() +
+                                    word_split[i].substring(1) +
+                                    " ";
+                            } else {
+                                line +=
+                                    word_split[i].substring(0, 1).toUpperCase() +
+                                    word_split[i].substring(1);
+                            }
+                        }
+                        return line;
+                    }
+                } else {
+                    return word.substring(0, 1).toUpperCase() + word.substring(1);
+                }
+            }
+        };
+
+        const newElement = (type) => {
+            if (null != type && typeof type == "string") {
+                return document.createElement(type);
+            }
+            return null;
+        };
+
+        const populateUserList = list => {
+            const userList = document.querySelector("#user-list");
+            if (countChildren(userList) > 0) {
+                removeChildren(userList);
+            }
+
+            for (username in list) {
+                const listItem = newElement("li");
+                para = newElement("p");
+
+                para.innerHTML = `<small><strong>${cap(list[username])}</strong></small>`;
+
+                addAttribute(listItem, "class", "list-group-item");
+
+                appendChild(userList, listItem);
+                appendChild(listItem, para);
+            };
+        };
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            socket = new WebSocket("ws://127.0.0.1:8080/ws");
+
+            socket.onopen = () => {
+                log("Successfully connected");
+            };
+
+            socket.onclose = () => {
+                log("Connection closed")
+            };
+
+            socket.onerror = () => {
+                log("There was an error")
+            };
+
+            socket.onmessage = msg => {
+                let data = JSON.parse(msg.data);
+                const action = data.action;
+                const users = data.connected_users
+
+                if (action && users.length) {
+                    log(`Action is ${action}\nUsers:\n\t${users}\n`);
+
+                    switch (action) {
+                        case "list_users":
+                            populateUserList(users);
+                            break;
+                    }
+                }
+
+            };
+
+            let userInput = document.querySelector("#username");
+
+            userInput.addEventListener("change", function () {
+                let jsonData = {};
+
+                jsonData.action = "username";
+                jsonData.username = this.value;
+
+                socket.send(JSON.stringify(jsonData))
+            });
+        });
+
+        window.onbeforeunload = function () {
+            log("Leaving chat room");
+            const jsonData = {};
+
+            jsonData.action = "left";
+
+            socket.send(JSON.stringify(jsonData));
+        };
+    </script>
+</body>
+
+</html>
