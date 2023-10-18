@@ -277,6 +277,11 @@
             };
         };
 
+        const handleBroadcast = (message) => {
+            const para = newElement("p");
+            para.innerHTML = `${message}`;
+            appendChild(output, para);
+        }
 
         const userInput = document.querySelector("#username");
         const sendButton = document.querySelector("#btn-send");
@@ -310,6 +315,11 @@
                         case "list_users":
                             populateUserList(users);
                             break;
+
+                        case "broadcast":
+                            handleBroadcast(data.message);
+                            break;
+
                     }
                 }
 
