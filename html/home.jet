@@ -278,6 +278,11 @@
         };
 
 
+        const userInput = document.querySelector("#username");
+        const sendButton = document.querySelector("#btn-send");
+        const messageInput = document.querySelector("#message");
+        const output = document.querySelector("#output");
+
         document.addEventListener("DOMContentLoaded", function () {
             socket = new WebSocket("ws://127.0.0.1:8080/ws");
 
@@ -310,8 +315,6 @@
 
             };
 
-            let userInput = document.querySelector("#username");
-
             userInput.addEventListener("change", function () {
                 let jsonData = {};
 
@@ -320,6 +323,29 @@
 
                 socket.send(JSON.stringify(jsonData))
             });
+        });
+
+        function sendMessage() {
+            if (messageInput.value && userInput.value) {
+                const jsonData = {};
+                jsonData.action = "broadcast";
+                jsonData.username = userInput.value;
+                jsonData.message = messageInput.value;
+                socket.send(JSON.stringify(jsonData));
+                messageInput.value = "";
+            }
+        }
+
+        messageInput.addEventListener("keyup", e => {
+            if (e.code == "Enter") {
+                if (!socket) {
+                    log("no connection");
+                    return false;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage();
+            }
         });
 
         window.onbeforeunload = function () {
