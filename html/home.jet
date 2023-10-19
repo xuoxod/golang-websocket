@@ -7,6 +7,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.css"
+        integrity="sha512-UrjLcAek5jbj1vwGbXkviPHtgSNVNQCedX7cBIMDdSI2iZtUcZcoTh2Sqc8R9mVcijOjFUi1IlxhfrE1uWaIog=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         .chatbox {
             outline: 1px solid silver;
@@ -55,8 +58,8 @@
 
                 <hr>
 
-                <div class="container text-center chatbox mb-3 rounded">
-                    <div id="output" class="row"></div>
+                <div class="container chatbox mb-3 rounded">
+                    <div id="output" class="row justify-content-center"></div>
                 </div>
             </div>
 
@@ -76,6 +79,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
         integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/notie/4.3.1/notie.min.js"
+        integrity="sha512-NHRCwRf2LnVSlLDejCA9oS3fG3/FLSQIPCjAWl3M7tVi5wszwr6FxkjotWnQDXLE+aLKcxRrzFDNEgXj9nvkPw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         let socket = null;
@@ -259,6 +265,27 @@
             return null;
         };
 
+        const error = msg => {
+            notie.alert({
+                type: "error",
+                text: msg,
+            })
+        };
+
+        const success = msg => {
+            notie.alert({
+                type: "success",
+                text: msg,
+            })
+        };
+
+        const warning = msg => {
+            notie.alert({
+                type: "warning",
+                text: msg,
+            })
+        };
+
         const populateUserList = list => {
             const userList = document.querySelector("#user-list");
             if (countChildren(userList) > 0) {
@@ -278,8 +305,17 @@
             };
         };
 
-        const handleBroadcast = (message) => {
+        const handleBroadcast = (data) => {
+            const message = data.message;
+            const from = data.from;
             const para = newElement("p");
+
+            if (from.trim() == userInput.value.trim()) {
+                addAttribute(para, "class", "col-10 p-1 m-1 text-start border rounded bg-success-subtle");
+            } else {
+                addAttribute(para, "class", "col-10 p-1 m-1 text-end border rounded bg-info-subtle");
+            }
+
             para.innerHTML = `${message}`;
             appendChild(output, para);
         }
@@ -309,7 +345,7 @@
                 const action = data.action;
                 const users = data.connected_users
 
-                if (action && users.length) {
+                if (action && users) {
                     log(`Action is ${action}\nUsers:\n\t${users}\n`);
 
                     switch (action) {
@@ -318,7 +354,7 @@
                             break;
 
                         case "broadcast":
-                            handleBroadcast(data.message);
+                            handleBroadcast(data);
                             break;
 
                     }

@@ -44,6 +44,8 @@ type WsJsonResponse struct {
 	Message        string   `json:"message"`
 	MessageType    string   `json:"message_type"`
 	ConnectedUsers []string `json:"connected_users"`
+	From           string   `json:"from"`
+	To             string   `json:"to"`
 }
 
 type WsPayload struct {
@@ -124,6 +126,7 @@ func ListenToWsChannel() {
 		case "broadcast":
 			response.Action = "broadcast"
 			response.Message = fmt.Sprintf("<strong>%s</strong>:\t%s", e.Username, e.Message)
+			response.From = e.Username
 			broadcastToAll(response)
 		}
 
