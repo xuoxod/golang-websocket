@@ -81,6 +81,7 @@
         let socket = null;
 
         const log = msg => console.log(msg);
+
         const addHandler = (theElement, whichEvent, method) => {
             if (null != theElement && null != whichEvent && typeof method == "function") {
                 theElement.addEventListener(whichEvent, method);
@@ -366,6 +367,8 @@
 
             socket.send(JSON.stringify(jsonData));
         };
+
+        sendButton.addEventListener("click", () => sendMessage);
     </script>
 </body>
 
