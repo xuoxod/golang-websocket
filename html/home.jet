@@ -368,7 +368,9 @@
             socket.send(JSON.stringify(jsonData));
         };
 
-        sendButton.addEventListener("click", () => sendMessage);
+        sendButton.addEventListener("click", () => {
+            sendMessage();
+        });
     </script>
 </body>
 
